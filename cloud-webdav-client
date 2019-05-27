@@ -1,14 +1,24 @@
 #!/bin/sh
 
 expand_url () {
-  base=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?\(.*\)/*:.*#\3#'`
-  path=`echo $1 | sed -e 's#\(https\?://\)\?.*:/*\(.*\)#\2#'`
-  user=`get_user $1`
+  base=`extract_base $1`
+  path=`extract_path $1`
+  user=`extract_user $1`
   url=https://$base/remote.php/dav/files/$user/$path
   echo "$url"
 }
 
-get_user() {
+extract_base() {
+  base=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?\(.*\)/*:.*#\3#'`
+  echo "$base"
+}
+
+extract_path() {
+  path=`echo $1 | sed -e 's#\(https\?://\)\?.*:/*\(.*\)#\2#'`
+  echo "$path"
+}
+
+extract_user() {
   user=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?.*#\2#' | sed -e 's#\(.*\)@#\1#'`
   [ -n "$user" ] || user=$USER
   echo $user
@@ -22,14 +32,14 @@ probable_file() {
 }
 
 delete () {
-  user=`get_user $1`
+  user=`extract_user $1`
   url=`expand_url $1`
 
   curl -u $user -X DELETE $url
 }
 
 move() {
-  user=`get_user $1`
+  user=`extract_user $1`
   src_url=`expand_url $1`
   dest_url=`expand_url $2`
 
@@ -37,7 +47,7 @@ move() {
 }
 
 mk_dir() {
-  user=`get_user $1`
+  user=`extract_user $1`
   url=`expand_url $1`
 
   curl -u $user -X MKCOL $url
@@ -45,21 +55,21 @@ mk_dir() {
 
 upload() {
   files=$1
-  user=`get_user $2`
+  user=`extract_user $2`
   url=`expand_url $2`
 
   curl -u $user -u $user -T $files $url
 }
 
 propget () {
-  user=`get_user $1`
+  user=`extract_user $1`
   url=`expand_url $1`
 
   curl -u $user -X PROPFIND --header "Depth: 1" $url
 }
 
 get () {
-  user=`get_user $1`
+  user=`extract_user $1`
   url=`expand_url $1`
 
   curl -u $user -O $url
