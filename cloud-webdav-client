@@ -69,6 +69,7 @@ usage() {
   cat  << EOF
 Usage: $0 <CMD> <URL>
 EOF
+exit 1
 }
 
 cmd=$1
