@@ -1,15 +1,15 @@
 #!/bin/sh
 
 expand_url () {
-  base=`echo $1 | sed -e 's#\(https://\|\)\(.*@\|\)\(.*\)/*:.*#\3#'`
-  path=`echo $1 | sed -e 's#\(https://\|\).*:/*\(.*\)#\2#'`
+  base=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?\(.*\)/*:.*#\3#'`
+  path=`echo $1 | sed -e 's#\(https\?://\)\?.*:/*\(.*\)#\2#'`
   user=`get_user $1`
   url=https://$base/remote.php/dav/files/$user/$path
   echo "$url"
 }
 
 get_user() {
-  user=`echo $1 | sed -e 's#\(https://\|\)\(.*@\|\).*#\2#' | sed -e 's#\(.*\)@#\1#'`
+  user=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?.*#\2#' | sed -e 's#\(.*\)@#\1#'`
   [ -n "$user" ] || user=$USER
   echo $user
 }
