@@ -1,12 +1,17 @@
 #!/bin/sh
 
-parse_url () {
+expand_url () {
   base=`echo $1 | sed -e 's#\(https://\|\)\(.*@\|\)\(.*\)/*:.*#\3#'`
   path=`echo $1 | sed -e 's#\(https://\|\).*:/*\(.*\)#\2#'`
+  user=`get_user $1`
+  url=https://$base/remote.php/dav/files/$user/$path
+  echo "$url"
+}
+
+get_user() {
   user=`echo $1 | sed -e 's#\(https://\|\)\(.*@\|\).*#\2#' | sed -e 's#\(.*\)@#\1#'`
   [ -n "$user" ] || user=$USER
-  url=https://$base/remote.php/dav/files/$user/$path
-  echo "$user#$url"
+  echo $user
 }
 
 probable_file() {
@@ -17,45 +22,45 @@ probable_file() {
 }
 
 delete () {
-  user=`parse_url $1 | cut -d# -f1`
-  url=`parse_url $1 | cut -d# -f2`
+  user=`get_user $1`
+  url=`expand_url $1`
 
   curl -u $user -X DELETE $url
 }
 
 move() {
-  user=`parse_url $1 | cut -d# -f1`
-  src_url=`parse_url $1 | cut -d# -f2`
-  dest_url=`parse_url $2 | cut -d# -f2`
+  user=`get_user $1`
+  src_url=`expand_url $1`
+  dest_url=`expand_url $2`
 
   curl -u $user -X MOVE --header "Destination:$dest_url" $src_url
 }
 
 mk_dir() {
-  user=`parse_url $1 | cut -d# -f1`
-  url=`parse_url $1 | cut -d# -f2`
+  user=`get_user $1`
+  url=`expand_url $1`
 
   curl -u $user -X MKCOL $url
 }
 
 upload() {
   files=$1
-  user=`parse_url $2 | cut -d# -f1`
-  url=`parse_url $2 | cut -d# -f2`
+  user=`get_user $2`
+  url=`expand_url $2`
 
   curl -u $user -u $user -T $files $url
 }
 
 propget () {
-  user=`parse_url $1 | cut -d# -f1`
-  url=`parse_url $1 | cut -d# -f2`
+  user=`get_user $1`
+  url=`expand_url $1`
 
   curl -u $user -X PROPFIND --header "Depth: 1" $url
 }
 
 get () {
-  user=`parse_url $1 | cut -d# -f1`
-  url=`parse_url $1 | cut -d# -f2`
+  user=`get_user $1`
+  url=`expand_url $1`
 
   curl -u $user -O $url
 }
