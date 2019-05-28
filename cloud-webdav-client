@@ -2,13 +2,29 @@
 
 expand_url () {
   url=$1
-  if echo $1 | grep '^cloud://' > /dev/null; then
+  mvpath=$2
+  if echo $url | grep '^cloud://' > /dev/null; then
     user=`extract_user $url`
     base=`extract_base $url`
-    path=`extract_path $url`
+    if [ -n "$mvpath" ]; then
+      if is_url $mvpath; then
+        path=`extract_path $mvpath`
+      else
+        path=`sed -e 's#/*\(.*\)#\1#'`
+      fi
+    else
+      path=`extract_path $url`
+    fi
     url=https://$base/remote.php/dav/files/$user/$path
+  elif [ -n "$mvpath" ]; then
+    url=$mvpath
   fi
   echo "$url"
+}
+
+is_url() {
+  echo $1 | grep '^/' > /dev/null || return 1
+  return 0
 }
 
 extract_base() {
@@ -46,7 +62,7 @@ delete () {
 move() {
   user=`extract_user $1`
   src_url=`expand_url $1`
-  dest_url=`expand_url $2`
+  dest_url=`expand_url $1 $2`
 
   curl -u $user -X MOVE --header "Destination:$dest_url" $src_url
 }
