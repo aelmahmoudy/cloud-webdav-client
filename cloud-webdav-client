@@ -87,7 +87,7 @@ EOF
 exit 1
 }
 
-cmd=$1
+cmd=` echo $1 | tr '[:upper:]' '[:lower:]'`
 
 
 case "$cmd" in
