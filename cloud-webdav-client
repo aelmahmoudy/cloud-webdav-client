@@ -1,26 +1,31 @@
 #!/bin/sh
 
 expand_url () {
-  base=`extract_base $1`
-  path=`extract_path $1`
-  user=`extract_user $1`
-  url=https://$base/remote.php/dav/files/$user/$path
+  url=$1
+  if echo $1 | grep '^cloud://' > /dev/null; then
+    user=`extract_user $url`
+    base=`extract_base $url`
+    path=`extract_path $url`
+    url=https://$base/remote.php/dav/files/$user/$path
+  fi
   echo "$url"
 }
 
 extract_base() {
-  base=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?\(.*\)/*:.*#\3#'`
+  base=`echo $1 | sed -e 's#\(https\?://\|cloud://\)\?\(.*@\)\?\(.*\)/*:.*#\3#'`
   echo "$base"
 }
 
 extract_path() {
-  path=`echo $1 | sed -e 's#\(https\?://\)\?.*:/*\(.*\)#\2#'`
+  path=`echo $1 | sed -e 's#\(https\?://\|cloud://\)\?.*:/*\(.*\)#\2#'`
   echo "$path"
 }
 
 extract_user() {
-  user=`echo $1 | sed -e 's#\(https\?://\)\?\(.*@\)\?.*#\2#' | sed -e 's#\(.*\)@#\1#'`
-  [ -n "$user" ] || user=$USER
+  user=`echo $1 | sed -e 's#\(https\?://\|cloud://\)\?\(.*@\)\?.*#\2#' | sed -e 's#\(.*\)@#\1#'`
+  if echo $1 | grep '^cloud://' > /dev/null; then
+    [ -n "$user" ] || user=$USER
+  fi
   echo $user
 }
 
